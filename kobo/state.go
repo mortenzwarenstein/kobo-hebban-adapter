@@ -63,6 +63,8 @@ func StateHandler(p *proxy.Proxy, hc *hebban.Client, bc *BookCache) http.Handler
 
 		p.Forward(w, r)
 
+		slog.Info("raw state body", "book_id", bookID, "body", string(body))
+
 		var state ProgressResponse
 		if err := json.Unmarshal(body, &state); err != nil {
 			slog.Error("failed to parse reading state", "book_id", bookID, "err", err)
