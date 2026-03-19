@@ -47,10 +47,10 @@ jobs:
           echo "${{ secrets.KUBECONFIG_PROD }}" > ~/.kube/config
           chmod 600 ~/.kube/config
 
-      - name: Write secret env file
+      - name: Write users config
         run: |
           mkdir -p k8s/overlays/prod/secrets
-          echo "HEBBAN_AUTH_TOKEN=${{ secrets.HEBBAN_AUTH_TOKEN }}" > k8s/overlays/prod/secrets/hebban.env
+          echo '${{ secrets.USERS_JSON }}' > k8s/overlays/prod/secrets/users.json
 
       - name: Apply manifests
         run: kustomize build k8s/overlays/prod | kubectl apply -f -

@@ -9,8 +9,8 @@ resources:
 
 secretGenerator:
   - name: hebban-secret
-    envs:
-      - secrets/hebban.env
+    files:
+      - users.json=secrets/users.json
     options:
       disableNameSuffixHash: true
 
