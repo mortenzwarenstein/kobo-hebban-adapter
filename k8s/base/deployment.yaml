@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kobo-hebban-adapter
+  labels:
+    app: kobo-hebban-adapter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kobo-hebban-adapter
+  template:
+    metadata:
+      labels:
+        app: kobo-hebban-adapter
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+      containers:
+        - name: adapter
+          image: ghcr.io/mortenzwarenstein/kobo-hebban-adapter:latest
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: PORT
+              value: "8080"
+            - name: HEBBAN_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hebban-secret
+                  key: HEBBAN_AUTH_TOKEN
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 64Mi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 10

@@ -1,0 +1,9 @@
+# Secret env files — never commit real tokens
+k8s/overlays/*/secrets/*.env
+
+# Go build output
+kobo-hebban-adapter
+
+# IDE
+.idea/
+*.iml

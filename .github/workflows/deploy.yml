@@ -1,0 +1,62 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64
+          tags: ghcr.io/mortenzwarenstein/kobo-hebban-adapter:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install kubectl and kustomize
+        run: |
+          curl -sLO "https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+          curl -sL "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG_PROD }}" > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Write secret env file
+        run: |
+          mkdir -p k8s/overlays/prod/secrets
+          echo "HEBBAN_AUTH_TOKEN=${{ secrets.HEBBAN_AUTH_TOKEN }}" > k8s/overlays/prod/secrets/hebban.env
+
+      - name: Apply manifests
+        run: kustomize build k8s/overlays/prod | kubectl apply -f -
+
+      - name: Restart deployment
+        run: kubectl rollout restart deployment/kobo-hebban-adapter -n kobo
+
+      - name: Wait for rollout
+        run: kubectl rollout status deployment/kobo-hebban-adapter -n kobo --timeout=120s

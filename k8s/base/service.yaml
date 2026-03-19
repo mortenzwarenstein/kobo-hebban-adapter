@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kobo-hebban-adapter
+  labels:
+    app: kobo-hebban-adapter
+spec:
+  selector:
+    app: kobo-hebban-adapter
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+  type: ClusterIP

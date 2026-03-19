@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kobo-hebban-adapter
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - hebban.mortenzwarenstein.nl
+      secretName: hebban-tls
+  rules:
+    - host: hebban.mortenzwarenstein.nl
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kobo-hebban-adapter
+                port:
+                  name: http
