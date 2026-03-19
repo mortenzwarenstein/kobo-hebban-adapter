@@ -15,37 +15,21 @@ type ProgressResponse struct {
 }
 
 type ReadingState struct {
-	CurrentBookmark CurrentBookmark `json:"CurrentBookmark"`
+	StatusInfo struct {
+		Status string `json:"Status"`
+	} `json:"StatusInfo"`
 }
 
-type CurrentBookmark struct {
-	ContentSourceProgressPercent int `json:"ContentSourceProgressPercent"`
-	ProgressPercent              int `json:"ProgressPercent"`
-}
-
-func (pr *ProgressResponse) progress() int {
-	best := 0
+func (pr *ProgressResponse) hebbanStatus() string {
 	for _, rs := range pr.ReadingStates {
-		p := rs.CurrentBookmark.ContentSourceProgressPercent
-		if p == 0 {
-			p = rs.CurrentBookmark.ProgressPercent
-		}
-		if p > best {
-			best = p
+		switch rs.StatusInfo.Status {
+		case "Finished":
+			return "read"
+		case "Reading":
+			return "reading"
 		}
 	}
-	return best
-}
-
-func progressToStatus(p int) string {
-	switch {
-	case p >= 100:
-		return "read"
-	case p > 0:
-		return "reading"
-	default:
-		return ""
-	}
+	return ""
 }
 
 func StateHandler(p *proxy.Proxy, hc *hebban.Client, bc *BookCache) http.HandlerFunc {
@@ -63,18 +47,15 @@ func StateHandler(p *proxy.Proxy, hc *hebban.Client, bc *BookCache) http.Handler
 
 		p.Forward(w, r)
 
-		slog.Info("raw state body", "book_id", bookID, "body", string(body))
-
 		var state ProgressResponse
 		if err := json.Unmarshal(body, &state); err != nil {
 			slog.Error("failed to parse reading state", "book_id", bookID, "err", err)
 			return
 		}
 
-		progress := state.progress()
-		status := progressToStatus(progress)
+		status := state.hebbanStatus()
 		if status == "" {
-			slog.Info("skipping Hebban update — progress is 0", "book_id", bookID)
+			slog.Info("skipping Hebban update — no actionable status", "book_id", bookID)
 			return
 		}
 
@@ -97,8 +78,7 @@ func StateHandler(p *proxy.Proxy, hc *hebban.Client, bc *BookCache) http.Handler
 					return
 				}
 			}
-			slog.Info("syncing to Hebban",
-				"book_id", bookID, "title", meta.Title, "progress", progress, "status", status)
+			slog.Info("syncing to Hebban", "book_id", bookID, "title", meta.Title, "status", status)
 			if err := hc.UpdateReadingStatus(meta.Title, meta.Author, status); err != nil {
 				slog.Error("Hebban sync failed", "book_id", bookID, "title", meta.Title, "err", err)
 			} else {
