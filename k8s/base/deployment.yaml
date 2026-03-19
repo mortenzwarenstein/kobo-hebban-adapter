@@ -30,10 +30,6 @@ spec:
             - name: users-config
               mountPath: /etc/kobo
               readOnly: true
-      volumes:
-        - name: users-config
-          secret:
-            secretName: hebban-secret
           resources:
             requests:
               cpu: 10m
@@ -52,3 +48,7 @@ spec:
               port: 8080
             initialDelaySeconds: 2
             periodSeconds: 10
+      volumes:
+        - name: users-config
+          secret:
+            secretName: hebban-secret
