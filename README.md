@@ -27,7 +27,8 @@ Each user gets a unique secret token that forms their personal URL prefix. Users
 
 ### Adding users
 
-Edit `users.json`:
+In production, edit the gitignored `users.json` at
+`cicd/apps/kobo-hebban-adapter/overlays/prod/secrets/users.json` (see the `cicd` repo). Locally:
 
 ```json
 {
@@ -82,17 +83,18 @@ USERS_CONFIG=users.json go run .
 
 ## Deployment
 
-The service runs on Kubernetes at `https://hebban.mortenzwarenstein.nl`. Deployment is handled automatically by GitHub Actions on every push to `master`.
+The service runs on Kubernetes at `https://hebban.mortenzwarenstein.nl`. The Kustomize manifests and ArgoCD
+`Application` live in the `cicd` repo, not here (`cicd/apps/kobo-hebban-adapter/` and
+`cicd/argocd/kobo-hebban-adapter.yaml`). ArgoCD syncs the cluster continuously from `cicd`.
 
-The pipeline:
-1. Builds and pushes `ghcr.io/mortenzwarenstein/kobo-hebban-adapter:latest` to GHCR
-2. Writes `users.json` from the `USERS_JSON` GitHub secret
-3. Applies the kustomize manifests to the cluster
-4. Rolls out the new deployment
+This repo only builds and pushes the image, on every published GitHub release:
+1. Builds and pushes `ghcr.io/mortenzwarenstein/kobo-hebban-adapter:<release-tag>` to GHCR (private)
 
-**GitHub Actions secrets required:**
+To actually roll out a release, bump `images[].newTag` in
+`cicd/apps/kobo-hebban-adapter/overlays/prod/kustomization.yaml` to the new tag and commit — ArgoCD picks up
+the change and syncs it.
 
-| Secret | Description |
-|---|---|
-| `USERS_JSON` | Contents of `users.json` |
-| `KUBECONFIG_PROD` | Kubeconfig for the production cluster |
+**Requires:**
+- The GHCR package `kobo-hebban-adapter` set to private (one-time, in GitHub package settings).
+- A `ghcr-pull-secret` (`kubernetes.io/dockerconfigjson`, scope `read:packages`) in the `kobo` namespace, created
+  out of band — it's what lets the cluster pull the private image.

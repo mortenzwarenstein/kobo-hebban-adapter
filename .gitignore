@@ -1,6 +1,3 @@
-# Secret env files — never commit real tokens
-k8s/overlays/*/secrets/
-
 # Go build output
 kobo-hebban-adapter
 

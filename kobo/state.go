@@ -82,7 +82,7 @@ func StateHandler(p *proxy.Proxy, hc *hebban.Client, bc *BookCache) http.Handler
 			if err := hc.UpdateReadingStatus(meta.Title, meta.Author, status); err != nil {
 				slog.Error("Hebban sync failed", "book_id", bookID, "title", meta.Title, "err", err)
 			} else {
-				slog.Info("Hebban sync succeeded", "book_id", bookID, "title", meta.Title, "status", status)
+				slog.Info("Hebban sync succeeded ~ after new release ~", "book_id", bookID, "title", meta.Title, "status", status)
 			}
 		}()
 	}
