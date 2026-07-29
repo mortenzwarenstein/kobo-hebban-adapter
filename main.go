@@ -38,6 +38,11 @@ func main() {
 
 	mux := http.NewServeMux()
 
+	rejectNonKoboPath := func(w http.ResponseWriter, r *http.Request) {
+		slog.Warn("rejected request to non-kobo path", "path", r.URL.Path)
+		http.NotFound(w, r)
+	}
+
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
@@ -67,6 +72,10 @@ func main() {
 	mux.HandleFunc("/{user_token}/", func(w http.ResponseWriter, r *http.Request) {
 		token := r.PathValue("user_token")
 		stripToken(r, token)
+		if !strings.HasPrefix(r.URL.Path, "/v1/") {
+			rejectNonKoboPath(w, r)
+			return
+		}
 		p.Handler()(w, r)
 	})
 
