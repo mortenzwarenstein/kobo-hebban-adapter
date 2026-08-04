@@ -1,14 +1,11 @@
 package kobo
 
 import (
-	"encoding/json"
-	"fmt"
-	"kobo-hebban-adapter/hebban"
-	"os"
+	"kobo-hebban-adapter/internal/hebban"
 	"sync"
 )
 
-type userEntry struct {
+type UserEntry struct {
 	Name        string `json:"name"`
 	HebbanToken string `json:"hebbanToken"`
 }
@@ -20,27 +17,16 @@ type User struct {
 
 type UserStore struct {
 	mu     sync.RWMutex
-	users  map[string]userEntry
+	users  map[string]UserEntry
 	caches map[string]*BookCache
 }
 
-func LoadUserStore(path string) (*UserStore, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("read users config: %w", err)
-	}
-
-	var cfg map[string]userEntry
-	if err := json.Unmarshal(data, &cfg); err != nil {
-		return nil, fmt.Errorf("parse users config: %w", err)
-	}
-
-	caches := make(map[string]*BookCache, len(cfg))
-	for token := range cfg {
+func NewUserStore(users map[string]UserEntry) *UserStore {
+	caches := make(map[string]*BookCache, len(users))
+	for token := range users {
 		caches[token] = NewBookCache()
 	}
-
-	return &UserStore{users: cfg, caches: caches}, nil
+	return &UserStore{users: users, caches: caches}
 }
 
 func (us *UserStore) Users() []User {

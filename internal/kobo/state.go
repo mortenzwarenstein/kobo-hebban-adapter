@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"kobo-hebban-adapter/hebban"
-	"kobo-hebban-adapter/proxy"
+	"kobo-hebban-adapter/internal/hebban"
+	"kobo-hebban-adapter/internal/proxy"
 	"log/slog"
 	"net/http"
 )
