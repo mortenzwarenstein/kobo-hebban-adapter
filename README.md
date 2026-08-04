@@ -20,6 +20,7 @@ Kobo status is mapped to Hebban status as follows:
 | anything else | (skipped)   |
 
 Requests with an unrecognised token are still proxied transparently to Kobo — no Hebban sync will happen.
+Any request under a token that isn't a Kobo `/v1/...` path is rejected with a 404 instead of being forwarded.
 
 ## Multi-tenant setup
 
@@ -27,21 +28,26 @@ Each user gets a unique secret token that forms their personal URL prefix. Users
 
 ### Adding users
 
-In production, edit the gitignored `users.json` at
-`cicd/apps/kobo-hebban-adapter/overlays/prod/secrets/users.json` (see the `cicd` repo). Locally:
+In production, edit the gitignored `config.json` at
+`cicd/apps/kobo-hebban-adapter/overlays/prod/secrets/config.json` (see the `cicd` repo). Locally:
 
 ```json
 {
-  "generated-token-for-alice": {
-    "name": "Alice",
-    "hebbanToken": "her-hebban-jwt"
-  },
-  "generated-token-for-bob": {
-    "name": "Bob",
-    "hebbanToken": "his-hebban-jwt"
+  "port": "8080",
+  "users": {
+    "generated-token-for-alice": {
+      "name": "Alice",
+      "hebbanToken": "her-hebban-jwt"
+    },
+    "generated-token-for-bob": {
+      "name": "Bob",
+      "hebbanToken": "his-hebban-jwt"
+    }
   }
 }
 ```
+
+`port` is optional and defaults to `8080`.
 
 Generate a token with:
 
@@ -64,13 +70,16 @@ The device and the adapter must be able to reach each other over the network. Th
 
 ## Running locally
 
-Create a `users.json` file:
+Create a `config.json` file:
 
 ```json
 {
-  "my-local-token": {
-    "name": "Me",
-    "hebbanToken": "your-hebban-jwt"
+  "port": "8080",
+  "users": {
+    "my-local-token": {
+      "name": "Me",
+      "hebbanToken": "your-hebban-jwt"
+    }
   }
 }
 ```
@@ -78,7 +87,7 @@ Create a `users.json` file:
 Then run:
 
 ```sh
-USERS_CONFIG=users.json go run .
+CONFIG_PATH=config.json go run ./cmd
 ```
 
 ## Deployment
