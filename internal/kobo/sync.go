@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"time"
 
-	"kobo-hebban-adapter/proxy"
+	"kobo-hebban-adapter/internal/proxy"
 )
 
 type SyncItem struct {
