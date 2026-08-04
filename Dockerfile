@@ -5,7 +5,7 @@ COPY go.mod ./
 RUN go mod download
 
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /kobo-hebban-adapter .
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /kobo-hebban-adapter ./cmd
 
 # ── runtime ──────────────────────────────────────────────────────────────────
 FROM scratch
