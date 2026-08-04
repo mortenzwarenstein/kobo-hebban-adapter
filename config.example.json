@@ -1,0 +1,9 @@
+{
+  "port": "8080",
+  "users": {
+    "correct-horse-battery-staple": {
+      "name": "john",
+      "hebbanToken": "abc123def456"
+    }
+  }
+}
